@@ -10,7 +10,11 @@
 		},
 		{
 			"include": "#reference"
+		},
+		{
+			"include": "text.tex.latex"
 		}
+
 	],
 	"repository": {
 		"definition": {
@@ -21,13 +25,13 @@
 		},
 		"reference": {
 			"patterns": [{
-				"name": "keyword.control.flow.noweb",
+				"name": "keyword.noweb",
 				"match": "^\\s*<<.*>>\\s*$"
 			}]
 		},
 		"chunk": {
 			"patterns": [{
-				"name": "meta.declaration.annotation.noweb",
+				"name": "string.noweb",
 				"match": "^@\\s*$"
 			}]
 		}
