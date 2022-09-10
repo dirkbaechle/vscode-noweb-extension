@@ -1,6 +1,6 @@
 /**
- * CWEB Extension for Visual Studio Code
- * Copyright (C) 2021  Ali AslRousta <aslrousta@gmail.com>
+ * Noweb Extension for Visual Studio Code
+ * Copyright (C) 2022  Dirk Baechle <dl9obn@darc.de>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
             const line = lines[i];
             switch (mode as Mode) {
                 case Mode.code:
-                    if (line.startsWith('@*') || line.startsWith('@ ')) {
+                    if (line.startsWith('@')) {
                         mode = Mode.tex;
                     } else {
                         mode = this._parseCode(tokens, i, line);
@@ -134,7 +134,7 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
 };
 
 export function activate(context: vscode.ExtensionContext) {
-    const selector: vscode.DocumentFilter = { language: 'cweb' };
+    const selector: vscode.DocumentFilter = { language: 'noweb' };
     const tokenProvider = new SemanticTokenProvider();
     context.subscriptions.push(
         vscode.languages.registerDocumentSemanticTokensProvider(selector, tokenProvider, legend)
