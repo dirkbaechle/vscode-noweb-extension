@@ -1,6 +1,6 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-	"name": "Noweb",
+	"name": "noweb",
 	"patterns": [
 		{
 			"include": "#chunk"
@@ -15,19 +15,19 @@
 	"repository": {
 		"definition": {
 			"patterns": [{
-				"name": "definition.code.noweb",
+				"name": "variable.language.noweb",
 				"match": "^<<.*>>=\\s*$"
 			}]
 		},
 		"reference": {
 			"patterns": [{
-				"name": "reference.code.noweb",
+				"name": "keyword.control.flow.noweb",
 				"match": "^\\s*<<.*>>\\s*$"
 			}]
 		},
 		"chunk": {
 			"patterns": [{
-				"name": "chunk.code.noweb",
+				"name": "meta.declaration.annotation.noweb",
 				"match": "^@\\s*$"
 			}]
 		}

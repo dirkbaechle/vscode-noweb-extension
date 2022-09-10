@@ -39,7 +39,7 @@
     }],
     "grammars": [{
       "language": "noweb",
-      "scopeName": "source.noweb",
+      "scopeName": "text.tex.latex.noweb",
       "path": "./syntaxes/noweb.tmLanguage.json"
     }]
   }
