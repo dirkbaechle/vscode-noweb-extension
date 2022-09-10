@@ -83,6 +83,17 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
     }
 
     private _parseCode(tokens: IToken[], i: number, line: string): Mode {
+        if (line.startsWith('<<') && line.endsWith('>>=')) {
+            tokens.push({
+                line: i, start: 0, length: line.length,
+                type: 'variable', modifiers: ['definition'],
+            });
+        } else if (line.trim().startsWith('<<') && line.endsWith('>>')) {
+            tokens.push({
+                line: i, start: 0, length: 1,
+                type: 'variable', modifiers: [],
+            });
+        }
         return Mode.code;
     }
 
@@ -92,31 +103,7 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
                 line: i, start: 0, length: line.length,
                 type: 'comment', modifiers: [],
             });
-        } else if (line.startsWith('@*')) {
-            let dot = line.indexOf('.');
-            if (dot < 0) { dot = line.length; }
-            tokens.push({
-                line: i, start: 0, length: dot,
-                type: 'keyword', modifiers: [],
-            });
-        } else if (line.startsWith('@ ')) {
-            tokens.push({
-                line: i, start: 0, length: 1,
-                type: 'keyword', modifiers: [],
-            });
-        } else if (line.startsWith('@c')) {
-            tokens.push({
-                line: i, start: 0, length: line.length,
-                type: 'keyword', modifiers: [],
-            });
-            return Mode.code;
-        } else if (line.startsWith('@<') || line.startsWith('@(')) {
-            tokens.push({
-                line: i, start: 0, length: line.length,
-                type: 'keyword', modifiers: [],
-            });
-            return Mode.code;
-        }
+        } 
         return Mode.tex;
     }
 
