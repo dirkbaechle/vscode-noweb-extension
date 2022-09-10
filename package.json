@@ -2,7 +2,7 @@
   "name": "noweb",
   "publisher": "dirkbaechle",
   "displayName": "Noweb",
-  "description": "Noweb Literate Programming",
+  "description": "Noweb Extension for Visual Studio Code",
   "version": "0.1.0",
   "license": "SEE LICENCE IN LICENSE",
   "author": {
@@ -19,7 +19,7 @@
     "url": "https://github.com/dirkbaechle/vscode-noweb-extension/issues"
   },
   "engines": {
-    "vscode": "^1.55.0"
+    "vscode": "^1.71.0"
   },
   "categories": [
     "Programming Languages"
@@ -30,38 +30,17 @@
     "knuth",
     "ramsey"
   ],
-  "main": "./out/extension.js",
-  "activationEvents": [
-    "onLanguage:noweb"
-  ],
   "contributes": {
-    "languages": [
-      {
-        "id": "noweb",
-        "extensions": [
-          ".nw",
-          ".noweb"
-        ]
-      }
-    ]
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "lint": "eslint src --ext ts"
-  },
-  "devDependencies": {
-    "@types/glob": "^7.1.3",
-    "@types/mocha": "^8.0.4",
-    "@types/node": "^12.11.7",
-    "@types/vscode": "^1.55.0",
-    "@typescript-eslint/eslint-plugin": "^4.14.1",
-    "@typescript-eslint/parser": "^4.14.1",
-    "eslint": "^7.19.0",
-    "glob": "^7.1.6",
-    "mocha": "^8.2.1",
-    "typescript": "^4.1.3",
-    "vscode-test": "^1.5.0"
+    "languages": [{
+      "id": "noweb",
+      "aliases": ["Noweb", "noweb"],
+      "extensions": [".nw",".noweb"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "noweb",
+      "scopeName": "source.noweb",
+      "path": "./syntaxes/noweb.tmLanguage.json"
+    }]
   }
 }
