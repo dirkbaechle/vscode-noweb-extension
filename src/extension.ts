@@ -46,6 +46,7 @@ interface IToken {
 }
 
 enum Mode { tex = 1, code };
+const blockStartType = 'keyword';
 
 class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
     provideDocumentSemanticTokens(doc: vscode.TextDocument, cancel: vscode.CancellationToken) {
@@ -60,50 +61,65 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
 
     private _parse(text: string, cancel: vscode.CancellationToken): IToken[] {
         let tokens: IToken[] = [];
-        let mode = Mode.tex;
+        let mode = Mode.code;
         let i = 0;
         const lines = text.split(/\r?\n/);
         while (i < lines.length && !cancel.isCancellationRequested) {
             const line = lines[i];
             switch (mode as Mode) {
                 case Mode.code:
-                    if (line.startsWith('@')) {
-                        mode = Mode.tex;
-                    } else {
-                        mode = this._parseCode(tokens, i, line);
-                        i++;
-                    }
+                    mode = this._parseCode(tokens, i, line);
                     break;
                 default:
                     mode = this._parseTeX(tokens, i, line);
-                    i++;
             }
+            i++;
         }
         return tokens;
     }
 
     private _parseCode(tokens: IToken[], i: number, line: string): Mode {
-        if (line.startsWith('<<') && line.endsWith('>>=')) {
-            tokens.push({
-                line: i, start: 0, length: line.length,
-                type: 'variable', modifiers: ['definition'],
-            });
-        } else if (line.trim().startsWith('<<') && line.endsWith('>>')) {
+        const isBlockStart = (line.length === 1) && line.startsWith('@');
+        if (isBlockStart) {
             tokens.push({
                 line: i, start: 0, length: 1,
-                type: 'variable', modifiers: [],
+                type: blockStartType, modifiers: [],
             });
+            return Mode.tex;
+        } else {
+            const trimmedLine = line.trim();
+            if (trimmedLine.startsWith('<<') && trimmedLine.endsWith('>>')) {
+                tokens.push({
+                    line: i, start: 0, length: line.length,
+                    type: 'keyword', modifiers: [],
+                });
+            }
         }
         return Mode.code;
     }
 
     private _parseTeX(tokens: IToken[], i: number, line: string): Mode {
-        if (line.startsWith('%')) {
+        const isBlockStart = (line.length === 1) && line.startsWith('@');
+        if (isBlockStart) {
+            tokens.push({
+                line: i, start: 0, length: 1,
+                type: blockStartType, modifiers: [],
+            });
+        } else if (line.startsWith('%')) {
             tokens.push({
                 line: i, start: 0, length: line.length,
                 type: 'comment', modifiers: [],
             });
-        } 
+        } else {
+            const trimmedLine = line.trim();
+            if (line.startsWith('<<') && trimmedLine.endsWith('>>=')) {
+                tokens.push({
+                    line: i, start: 0, length: line.length,
+                    type: 'variable', modifiers: ['definition'],
+                });
+                return Mode.code;
+            }
+        }
         return Mode.tex;
     }
 
