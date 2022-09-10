@@ -3,30 +3,34 @@
 	"name": "Noweb",
 	"patterns": [
 		{
-			"include": "#keywords"
+			"include": "#chunk"
 		},
 		{
-			"include": "#strings"
+			"include": "#definition"
+		},
+		{
+			"include": "#reference"
 		}
 	],
 	"repository": {
-		"keywords": {
+		"definition": {
 			"patterns": [{
-				"name": "keyword.control.noweb",
-				"match": "\\b(if|while|for|return)\\b"
+				"name": "definition.code.noweb",
+				"match": "^<<.*>>=\\s*$"
 			}]
 		},
-		"strings": {
-			"name": "string.quoted.double.noweb",
-			"begin": "\"",
-			"end": "\"",
-			"patterns": [
-				{
-					"name": "constant.character.escape.noweb",
-					"match": "\\\\."
-				}
-			]
+		"reference": {
+			"patterns": [{
+				"name": "reference.code.noweb",
+				"match": "^\\s*<<.*>>\\s*$"
+			}]
+		},
+		"chunk": {
+			"patterns": [{
+				"name": "chunk.code.noweb",
+				"match": "^@\\s*$"
+			}]
 		}
 	},
-	"scopeName": "source.noweb"
+	"scopeName": "text.tex.latex.noweb"
 }
