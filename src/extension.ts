@@ -46,7 +46,7 @@ interface IToken {
 }
 
 enum Mode { tex = 1, code };
-const blockStartType = 'keyword';
+const chunkStartType = 'macro';
 
 class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
     provideDocumentSemanticTokens(doc: vscode.TextDocument, cancel: vscode.CancellationToken) {
@@ -79,11 +79,11 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
     }
 
     private _parseCode(tokens: IToken[], i: number, line: string): Mode {
-        const isBlockStart = (line.length === 1) && line.startsWith('@');
-        if (isBlockStart) {
+        const isChunkStart = (line.length === 1) && line.startsWith('@');
+        if (isChunkStart) {
             tokens.push({
                 line: i, start: 0, length: 1,
-                type: blockStartType, modifiers: [],
+                type: chunkStartType, modifiers: [],
             });
             return Mode.tex;
         } else {
@@ -99,11 +99,11 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
     }
 
     private _parseTeX(tokens: IToken[], i: number, line: string): Mode {
-        const isBlockStart = (line.length === 1) && line.startsWith('@');
-        if (isBlockStart) {
+        const isChunkStart = (line.length === 1) && line.startsWith('@');
+        if (isChunkStart) {
             tokens.push({
                 line: i, start: 0, length: 1,
-                type: blockStartType, modifiers: [],
+                type: chunkStartType, modifiers: [],
             });
         } else if (line.startsWith('%')) {
             tokens.push({
