@@ -3,13 +3,10 @@
 	"name": "noweb",
 	"patterns": [
 		{
-			"include": "#chunk"
+			"include": "#chunkstart"
 		},
 		{
-			"include": "#definition"
-		},
-		{
-			"include": "#reference"
+			"include": "#chunkcode"
 		},
 		{
 			"include": "text.tex.latex"
@@ -17,23 +14,24 @@
 
 	],
 	"repository": {
-		"definition": {
-			"patterns": [{
-				"name": "variable.language.noweb",
-				"match": "^<<.*>>=\\s*$"
-			}]
-		},
-		"reference": {
-			"patterns": [{
-				"name": "keyword.noweb",
-				"match": "^\\s*<<.*>>\\s*$"
-			}]
-		},
-		"chunk": {
+		"chunkstart": {
 			"patterns": [{
 				"name": "string.noweb",
 				"match": "^@\\s*$"
 			}]
+		},
+		"chunkcode": {
+			"patterns": [{
+				"contentName": "string.regexp",
+				"begin" : "^<<.*>>=\\s*$",
+				"end" : "^@\\s*$",
+				"beginCaptures": {
+					"0": { "name": "variable.language.noweb" }
+				},
+				"endCaptures": {
+					"0": { "name": "string.noweb" }
+				}
+			 }]
 		}
 	},
 	"scopeName": "text.tex.latex.noweb"
