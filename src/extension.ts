@@ -45,11 +45,13 @@ interface IToken {
 }
 
 enum Mode { tex = 1, code };
-const chunkStartType = 'string'; // was 'string.noweb'
-const definitionType = 'variable'; // was 'variable.language.noweb'
-const referenceType = 'keyword'; // was 'keyword.noweb'
-const latexType = 'text'; // was 'text.tex.latex.noweb'
-const codeType = 'string'; // was 'string.regexp.noweb'
+const chunkStartType = 'function';
+const chunkStartModifiers = ['declaration'];
+const definitionType = 'variable';
+const referenceType = 'keyword';
+const undefinedReferenceType = 'comment';
+const latexType = 'text';
+const codeType = 'string';
 
 const reDefinition = /^<<.*>>=\s*$/;
 const reReference = /^\s*<<.*>>\s*$/;
@@ -89,7 +91,7 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
         if (reChunkStart.test(line)) {
             tokens.push({
                 line: i, start: 0, length: 1,
-                type: chunkStartType, modifiers: [],
+                type: chunkStartType, modifiers: chunkStartModifiers,
             });
             return Mode.tex;
         } else if (reReference.test(line)) {
@@ -110,7 +112,7 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
         if (reChunkStart.test(line)) {
             tokens.push({
                 line: i, start: 0, length: 1,
-                type: chunkStartType, modifiers: [],
+                type: chunkStartType, modifiers: chunkStartModifiers,
             });
         } else if (reDefinition.test(line)) {
             tokens.push({
