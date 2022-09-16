@@ -11,6 +11,7 @@ Its main goal is to provide a somewhat decent syntax highlighting for Noweb file
 
 - Basic syntax highlighting.
 - Detects and colorizes undefined keywords.
+- Basic folding support.
 
 ## Known Issues
 

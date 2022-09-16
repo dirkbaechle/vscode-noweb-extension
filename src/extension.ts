@@ -60,7 +60,7 @@ const reDefinition = /^<<(.*)>>=\s*$/;
 const reReference = /^\s*<<(.*)>>\s*$/;
 const reChunkStart = /^@\s*$/;
 
-class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
+class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
     provideDocumentSemanticTokens(doc: vscode.TextDocument, cancel: vscode.CancellationToken) {
         const builder = new vscode.SemanticTokensBuilder();
         this._parse(doc.getText(), cancel).forEach((token) => builder.push(
@@ -169,10 +169,37 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
     }
 };
 
+class NowebFoldingRangeProvider implements vscode.FoldingRangeProvider {
+    provideFoldingRanges(document: vscode.TextDocument, context: vscode.FoldingContext, token: vscode.CancellationToken): vscode.FoldingRange[] {
+        let ranges: vscode.FoldingRange[] = [];
+        const docText = document.getText();
+
+        let lastFoldline = 0;
+        let i = 0;
+        const lines = docText.split(/\r?\n/);
+        while (i < lines.length) {
+            const line = lines[i];
+
+            // Check for the start of a new Noweb chunk
+            if (reChunkStart.test(line)) {
+                if ((i-1) > lastFoldline) {
+                    ranges.push(new vscode.FoldingRange(lastFoldline, i-1));
+                    lastFoldline = i;
+                }
+            }
+            i++;
+        }
+
+        return ranges;
+    }
+}
+
 export function activate(context: vscode.ExtensionContext) {
     const selector: vscode.DocumentFilter = { language: 'noweb' };
-    const tokenProvider = new SemanticTokenProvider();
+    const tokenProvider = new NowebTokenProvider();
+    const foldingProvider = new NowebFoldingRangeProvider();
     context.subscriptions.push(
         vscode.languages.registerDocumentSemanticTokensProvider(selector, tokenProvider, legend)
-    );
+        );
+    vscode.languages.registerFoldingRangeProvider({ scheme: 'file', language: 'noweb' }, foldingProvider);
 }
