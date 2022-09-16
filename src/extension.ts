@@ -16,7 +16,6 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Context } from 'mocha';
 import * as vscode from 'vscode';
 
 const tokenTypes = new Map<string, number>();
@@ -46,7 +45,15 @@ interface IToken {
 }
 
 enum Mode { tex = 1, code };
-const chunkStartType = 'macro';
+const chunkStartType = 'string'; // was 'string.noweb'
+const definitionType = 'variable'; // was 'variable.language.noweb'
+const referenceType = 'keyword'; // was 'keyword.noweb'
+const latexType = 'text'; // was 'text.tex.latex.noweb'
+const codeType = 'string'; // was 'string.regexp.noweb'
+
+const reDefinition = /^<<.*>>=\s*$/;
+const reReference = /^\s*<<.*>>\s*$/;
+const reChunkStart = /^@\s*$/;
 
 class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
     provideDocumentSemanticTokens(doc: vscode.TextDocument, cancel: vscode.CancellationToken) {
@@ -79,46 +86,40 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
     }
 
     private _parseCode(tokens: IToken[], i: number, line: string): Mode {
-        const isChunkStart = (line.length === 1) && line.startsWith('@');
-        if (isChunkStart) {
+        if (reChunkStart.test(line)) {
             tokens.push({
                 line: i, start: 0, length: 1,
                 type: chunkStartType, modifiers: [],
             });
             return Mode.tex;
-        } else {
-            const trimmedLine = line.trim();
-            if (trimmedLine.startsWith('<<') && trimmedLine.endsWith('>>')) {
+        } else if (reReference.test(line)) {
                 tokens.push({
                     line: i, start: 0, length: line.length,
-                    type: 'keyword', modifiers: [],
+                    type: referenceType, modifiers: [],
                 });
-            }
+        } else {
+            tokens.push({
+                line: i, start: 0, length: line.length,
+                type: codeType, modifiers: [],
+            });
         }
         return Mode.code;
     }
 
     private _parseTeX(tokens: IToken[], i: number, line: string): Mode {
-        const isChunkStart = (line.length === 1) && line.startsWith('@');
-        if (isChunkStart) {
+        if (reChunkStart.test(line)) {
             tokens.push({
                 line: i, start: 0, length: 1,
                 type: chunkStartType, modifiers: [],
             });
-        } else if (line.startsWith('%')) {
+        } else if (reDefinition.test(line)) {
             tokens.push({
                 line: i, start: 0, length: line.length,
-                type: 'comment', modifiers: [],
+                type: definitionType, modifiers: [],
             });
+            return Mode.code;
         } else {
-            const trimmedLine = line.trim();
-            if (line.startsWith('<<') && trimmedLine.endsWith('>>=')) {
-                tokens.push({
-                    line: i, start: 0, length: line.length,
-                    type: 'variable', modifiers: ['definition'],
-                });
-                return Mode.code;
-            }
+            // handle LaTeX parsing here
         }
         return Mode.tex;
     }
