@@ -42,9 +42,12 @@ interface IToken {
     length: number;
     type: string;
     modifiers: string[];
+    keyword: string;
 }
 
+// Parsing mode
 enum Mode { tex = 1, code };
+// Token types/modifiers for our detected items
 const chunkStartType = 'function';
 const chunkStartModifiers = ['declaration'];
 const definitionType = 'variable';
@@ -52,9 +55,9 @@ const referenceType = 'keyword';
 const undefinedReferenceType = 'comment';
 const latexType = 'text';
 const codeType = 'string';
-
-const reDefinition = /^<<.*>>=\s*$/;
-const reReference = /^\s*<<.*>>\s*$/;
+// Regexes
+const reDefinition = /^<<(.*)>>=\s*$/;
+const reReference = /^\s*<<(.*)>>\s*$/;
 const reChunkStart = /^@\s*$/;
 
 class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
@@ -70,6 +73,7 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
 
     private _parse(text: string, cancel: vscode.CancellationToken): IToken[] {
         let tokens: IToken[] = [];
+        let keywords = {defines: new Set<string>()};
         let mode = Mode.code;
         let i = 0;
         const lines = text.split(/\r?\n/);
@@ -80,48 +84,74 @@ class SemanticTokenProvider implements vscode.DocumentSemanticTokensProvider {
                     mode = this._parseCode(tokens, i, line);
                     break;
                 default:
-                    mode = this._parseTeX(tokens, i, line);
+                    mode = this._parseTeX(tokens, i, line, keywords);
             }
             i++;
         }
+
+        // Loop over all tokens and check whether all found keywords
+        // are actually defined. Patch the tokens to use a different
+        // type/color if they aren't.
+        tokens.forEach(item => {
+            if (keywords.defines.size > 0 && item.keyword && !keywords.defines.has(item.keyword)) {
+                item.type = undefinedReferenceType;
+            }
+        });
         return tokens;
     }
 
     private _parseCode(tokens: IToken[], i: number, line: string): Mode {
+        // Check for the start of a new Noweb chunk
         if (reChunkStart.test(line)) {
             tokens.push({
                 line: i, start: 0, length: 1,
                 type: chunkStartType, modifiers: chunkStartModifiers,
+                keyword: ''
             });
             return Mode.tex;
-        } else if (reReference.test(line)) {
+        } else {
+            // Check for a keyword reference
+            const match = reReference.exec(line);
+            if (match) {
                 tokens.push({
                     line: i, start: 0, length: line.length,
                     type: referenceType, modifiers: [],
+                    keyword: match[1]
                 });
-        } else {
-            tokens.push({
-                line: i, start: 0, length: line.length,
-                type: codeType, modifiers: [],
-            });
+            } else {
+                // We assume that all other lines are code
+                tokens.push({
+                    line: i, start: 0, length: line.length,
+                    type: codeType, modifiers: [],
+                    keyword: ''
+                });
+            }
         }
         return Mode.code;
     }
 
-    private _parseTeX(tokens: IToken[], i: number, line: string): Mode {
+    private _parseTeX(tokens: IToken[], i: number, line: string, keywords: {defines: Set<string>}): Mode {
+        // Check for the start of a new Noweb chunk
         if (reChunkStart.test(line)) {
             tokens.push({
                 line: i, start: 0, length: 1,
                 type: chunkStartType, modifiers: chunkStartModifiers,
+                keyword: ''
             });
-        } else if (reDefinition.test(line)) {
-            tokens.push({
-                line: i, start: 0, length: line.length,
-                type: definitionType, modifiers: [],
-            });
-            return Mode.code;
         } else {
-            // handle LaTeX parsing here
+            // Check for a keyword definition
+            const match = reDefinition.exec(line);
+            if (match) {
+                tokens.push({
+                    line: i, start: 0, length: line.length,
+                    type: definitionType, modifiers: [],
+                    keyword: ''
+                });
+                keywords.defines.add(match[1]);
+                return Mode.code;
+            } else {
+                // TODO: handle LaTeX parsing here
+            }
         }
         return Mode.tex;
     }
