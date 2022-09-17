@@ -64,7 +64,7 @@ const reChunkStart = /^@\s*$/;
 
 const reLaTeXComment = /^([^\\]*)(%.*)$/;
 const reLaTeXSection = /\\(section|subsection|subsubsection|paragraph|subparagraph|title|author)\{[^\}]*\}/;
-const reLaTeXCommand = /\\[\[\]\{\}0-9a-zA-Z_]+/;
+const reLaTeXCommand = /\\[\[\]\{\}0-9a-zA-Z_]+/g;
 
 class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
     provideDocumentSemanticTokens(doc: vscode.TextDocument, cancel: vscode.CancellationToken) {
@@ -189,13 +189,13 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
             });
         } else {
             match = reLaTeXCommand.exec(line);
-            if (match) {
+            while (match) {
                 tokens.push({
                     line: i, start: match.index, length: match[0].length,
                     type: latexCommandType, modifiers: [],
                     keyword: ''
                 });
-                // match = reLaTeXCommand.exec(commandLine);
+                match = reLaTeXCommand.exec(line);
             }
         }
     }
