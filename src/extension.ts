@@ -17,6 +17,7 @@
  */
 
 import * as vscode from 'vscode';
+import * as path from "path";
 
 const tokenTypes = new Map<string, number>();
 const tokenModifiers = new Map<string, number>();
@@ -36,6 +37,10 @@ const legend = (function () {
     return new vscode.SemanticTokensLegend(types, modifiers);
 })();
 
+/**
+ * Defines the grammar token type for our internal
+ * parsing.
+ */
 interface IToken {
     line: number;
     start: number;
@@ -45,6 +50,80 @@ interface IToken {
     keyword: string;
 }
 
+/**
+ * Defines a grammar file that's in a VS Code Extension.
+ */
+ interface IExtensionGrammar {
+    /**
+     * The name of the language, e.g. powershell
+     */
+    language?: string;
+    /**
+     * The absolute path to the grammar file
+     */
+    path?: string;
+    /**
+     * The path to the extension
+     */
+    extensionPath?: string;
+}
+
+/**
+ * Defines a VS Code extension with minimal properties for
+ * grammar contribution.
+ */
+interface IExtensionPackage {
+    /**
+     * Hashtable of items this extension contributes
+     */
+    contributes?: {
+        /**
+         * Array of grammars this extension supports
+         */
+        grammars?: IExtensionGrammar[],
+    };
+}
+
+/**
+ * Defines a grammar token in a text document, which will get used for
+ * the parsing of the LaTeX sections.
+ * We need to reproduce the IToken interface from vscode-textmate due to the
+ * odd way it has to be required.
+ * https://github.com/Microsoft/vscode-textmate/blob/46af9487e1c8fa78aa1f2e2/release/main.d.ts#L161-L165
+ */
+interface ILaTeXToken {
+    /**
+     * Zero based offset where the token starts
+     */
+    startIndex: number;
+    /**
+     * Zero based offset where the token ends
+     */
+    readonly endIndex: number;
+    /**
+     * Array of scope names that the token is a member of
+     */
+    readonly scopes: string[];
+}
+
+/**
+ * Defines a list of grammar tokens, typically for an entire text document
+ */
+interface ITokenList extends Array<ILaTeXToken> { }
+
+/**
+ * Due to how the vscode-textmate library is required, we need to minimally define a Grammar
+ * object, which can be used to tokenize a text document.
+ * https://github.com/Microsoft/vscode-textmate/blob/46af9487e1c8fa78aa1f2e2/release/main.d.ts#L92-L108
+ */
+interface IGrammar {
+    /**
+     * Tokenize `lineText` using previous line state `prevState`.
+     */
+    tokenizeLine(lineText: any, prevState: any): any;
+}
+
+
 // Parsing mode
 enum Mode { tex = 1, code };
 // Token types/modifiers for our detected items
@@ -53,7 +132,6 @@ const chunkStartModifiers = ['declaration'];
 const definitionType = 'variable';
 const referenceType = 'keyword';
 const undefinedReferenceType = 'comment';
-const latexType = 'text';
 const codeType = 'string';
 // Regexes
 const reDefinition = /^<<(.*)>>=\s*$/;
@@ -61,8 +139,14 @@ const reReference = /^\s*<<(.*)>>\s*$/;
 const reChunkStart = /^@\s*$/;
 
 class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
+    private latexGrammar: IGrammar|undefined;
+
     provideDocumentSemanticTokens(doc: vscode.TextDocument, cancel: vscode.CancellationToken) {
+        // Detect LaTeX grammar and initialize it, if possible
+        this.latexGrammar = this.grammar();
+        // Setup our token builder
         const builder = new vscode.SemanticTokensBuilder();
+        // Start parsing and create output tokens
         this._parse(doc.getText(), cancel).forEach((token) => builder.push(
             token.line, token.start, token.length,
             this._encodeType(token.type),
@@ -151,6 +235,15 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
                 return Mode.code;
             } else {
                 // TODO: handle LaTeX parsing here
+                if (this.latexGrammar !== undefined) {
+                    // Convert the document text into a series of grammar tokens
+                    // const tokens: ITokenList = this.latexGrammar.tokenizeLine(latexSnippet, null).tokens;
+                    tokens.push({
+                        line: i, start: 0, length: line.length,
+                        type: 'comment', modifiers: [],
+                        keyword: ''
+                    });
+                }
             }
         }
         return Mode.tex;
@@ -166,6 +259,65 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
             result |= 1 << tokenModifiers.get(modifier)!;
         });
         return result;
+    }
+
+    /**
+         * Returns the LaTeX grammar parser, from the vscode-textmate node module
+         * @returns      A grammar parser for the LaTeX language, is successful or
+         *               'undefined' if an error occured
+         */
+    public grammar(): IGrammar|undefined {
+        const tm = this.getCoreNodeModule("vscode-textmate");
+        if (tm === null) { return undefined; }
+        const registry = new tm.Registry();
+        if (registry === null) { return undefined; }
+        const grammarPath = this._latexGrammarPath();
+        if (grammarPath.length === 0) { return undefined; }
+        try {
+            return registry.loadGrammarFromPathSync(grammarPath);
+        } catch (err) { return undefined; }
+    }
+
+    /**
+     * Returns a node module installed within VSCode, or null if it fails.
+     * Some node modules (e.g. vscode-textmate) cannot be required directly, instead the known module locations
+     * must be tried. Documented in https://github.com/Microsoft/vscode/issues/46281
+     * @param moduleName Name of the module to load e.g. vscode-textmate
+     * @returns          The required module, or null if the module cannot be required
+     */
+    private getCoreNodeModule(moduleName: string) {
+        // Attempt to load the module from known locations
+        const loadLocations: string[] = [
+            `${vscode.env.appRoot}/node_modules.asar/${moduleName}`,
+            `${vscode.env.appRoot}/node_modules/${moduleName}`,
+        ];
+
+        for (const filename of loadLocations) {
+            try {
+                const mod = require(filename);
+                return mod;
+            } catch (err) {
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Go through all the VSCode extension packages and search for
+     * JSON LaTeX grammars.
+     * @returns the path to the first LaTeX grammar we find
+     */
+    private _latexGrammarPath(): string {
+        for (const ext of vscode.extensions.all) {
+            if (!(ext.packageJSON && ext.packageJSON.contributes && ext.packageJSON.contributes.grammars)) {
+                continue;
+            }
+            for (const grammar of ext.packageJSON.contributes.grammars) {
+                if (grammar.language !== "latex") { continue; }
+                return path.join(ext.extensionPath, grammar.path);
+            }
+        }
+        return '';
     }
 };
 
