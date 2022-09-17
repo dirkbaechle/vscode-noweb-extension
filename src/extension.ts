@@ -62,7 +62,6 @@ const reDefinition = /^<<(.*)>>=\s*$/;
 const reReference = /^\s*<<(.*)>>\s*$/;
 const reChunkStart = /^@\s*$/;
 
-const reLaTeXComment = /^([^\\]*)(%.*)$/;
 const reLaTeXSection = /\\(section|subsection|subsubsection|paragraph|subparagraph|title|author)\{[^\}]*\}/;
 const reLaTeXCommand = /\\[\[\]\{\}0-9a-zA-Z_]+/g;
 
@@ -157,11 +156,25 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
                 return Mode.code;
             } else {
                 // Check for a comment definition...
-                const match = reLaTeXComment.exec(line);
+                let idx = 0;
                 let endIndex = line.length;
-                if (match) {
+                while (idx < endIndex) {
+                    if (line[idx] === '\\') {
+                        if (idx < endIndex-1) {
+                            // Skip potential '\%'
+                            idx++;
+                        }
+                    } else {
+                        // Found a comment
+                        if (line[idx] === '%') {
+                            break;
+                        }
+                    }
+                    idx++;
+                }
+                if (idx < endIndex) {
                     // ... and 'split it off'.
-                    endIndex = match[1].length;
+                    endIndex = idx;
                     tokens.push({
                         line: i, start: endIndex, length: line.length-endIndex,
                         type: latexCommentType, modifiers: [],
