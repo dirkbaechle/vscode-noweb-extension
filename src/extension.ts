@@ -59,7 +59,7 @@ const codeType = 'string';
 // Regexes
 const reDefinition = /^<<(.*)>>=\s*$/;
 const reAddDefinition = /^<<(.*)>>\+=\s*$/;
-const reReference = /^\s*<<(.*)>>\s*$/;
+const reReference = /<<(.*?)>>/g;
 const reChunkStart = /^@\s*.*$/;
 
 class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
@@ -112,24 +112,50 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
             });
             return Mode.tex;
         } else {
-            // Check for a keyword reference
-            const match = reReference.exec(line);
-            if (match) {
-                tokens.push({
-                    line: i, start: 0, length: line.length,
-                    type: referenceType, modifiers: [],
-                    keyword: match[1]
-                });
-            } else {
-                const {mode, found} = this._checkForDefinitionKeywords(tokens, i, line, keywords);
-                if (!found) {
+            // Check for keyword definitions first
+            const {mode, found} = this._checkForDefinitionKeywords(tokens, i, line, keywords);
+            if (!found) {
+                // Check for keyword references
+                let hasReference: boolean = false;
+                let lastCodeIndex = 0;
+                let match = reReference.exec(line);
+                while (match) {
+                    hasReference = true;
+                    tokens.push({
+                        line: i, start: match.index, length: match[0].length,
+                        type: referenceType, modifiers: [],
+                        keyword: match[1]
+                    });
+                    // Handle code snippets inbetween matches
+                    if (lastCodeIndex < match.index) {
+                        tokens.push({
+                            line: i, start: lastCodeIndex, length: (match.index - lastCodeIndex),
+                            type: codeType, modifiers: [],
+                            keyword: ''
+                        });
+                    }
+                    lastCodeIndex = match.index + match[0].length;
+                    match = reReference.exec(line);
+                }
+                if (hasReference) {
+                    // Close remaining code snippet after last match
+                    if (lastCodeIndex < line.length) {
+                        // Add final code markup
+                        tokens.push({
+                            line: i, start: lastCodeIndex, length: (line.length - lastCodeIndex),
+                            type: codeType, modifiers: [],
+                            keyword: ''
+                        });
+                    }
+                }
+                if (!hasReference) {
                     // We assume that all other lines are code
                     tokens.push({
                         line: i, start: 0, length: line.length,
                         type: codeType, modifiers: [],
                         keyword: ''
                     });
-                } 
+                }
             }
         }
         return Mode.code;

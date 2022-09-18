@@ -15,7 +15,7 @@
 			"patterns": [{
 				"name": "source.noweb",
 				"begin" : "^<<.*>>=\\s*$",
-				"end" : "^@\\s*$"
+				"end" : "^@\\s*.*$"
 			 }]
 		}
 	},
