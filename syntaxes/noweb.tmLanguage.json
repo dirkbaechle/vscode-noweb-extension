@@ -1,0 +1,38 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "noweb",
+	"patterns": [
+		{
+			"include": "#chunkstart"
+		},
+		{
+			"include": "#chunkcode"
+		},
+		{
+			"include": "text.tex.latex"
+		}
+
+	],
+	"repository": {
+		"chunkstart": {
+			"patterns": [{
+				"name": "string.noweb",
+				"match": "^@\\s*$"
+			}]
+		},
+		"chunkcode": {
+			"patterns": [{
+				"contentName": "string.regexp",
+				"begin" : "^<<.*>>=\\s*$",
+				"end" : "^@\\s*$",
+				"beginCaptures": {
+					"0": { "name": "variable.language.noweb" }
+				},
+				"endCaptures": {
+					"0": { "name": "string.noweb" }
+				}
+			 }]
+		}
+	},
+	"scopeName": "text.tex.latex.noweb"
+}
