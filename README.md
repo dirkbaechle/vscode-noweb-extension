@@ -6,12 +6,14 @@ the [Noweb](https://www.cs.tufts.edu/~nr/noweb/) tool written by Norman Ramsey.
 
 Its main goal is to provide a somewhat decent syntax highlighting for *Noweb* files.
 
-*Note: This is a work in progress and has been tested with Noweb versions 2.x only.*
+**Note**: This is a work in progress and has been tested with Noweb versions 2.x only. There
+currently are no tests provided, however the extension was manually tested against the
+syntax of all the example files in https://github.com/nrnrnr/noweb/tree/master/examples.
 
 ## Features
 
-- Basic syntax highlighting for *Noweb* keywords. The LaTeX sections are delegated to the
-  internal TeX highlighting grammars of VS Code.
+- Basic syntax highlighting for *Noweb* keywords. The TeX sections are delegated to the
+  internal LaTeX highlighting grammars of VS Code.
 - Detects and colorizes undefined *Noweb* keywords.
 - Basic folding support.
 - Auto-completion for `<<>>` brackets.
@@ -21,6 +23,21 @@ Its main goal is to provide a somewhat decent syntax highlighting for *Noweb* fi
 - *Noweb* common file extensions, `.nw` and `.noweb`, may conflict with other tools.
 - The used token types, and therefore the items' colors, have been tested with the "Dark+"
   theme only. Token colors may clash or be undistinguishable when using a different theme.
+- The current parsing assumes that the start of a new chunk (`@` in first column) and a
+  possible keyword definition, appear in separate lines. So, a very condensed syntax
+  `@<<\fIchunk name\fP@>>=`, like in `manpage.nw` of the original *Noweb* sources,
+  isn't detected correctly.
+
+  This is easily fixable in the `.nw` file by pressing the `Return` key once, so at the moment
+  I don't plan to do anything about it.
+- Since we simply direct all LaTeX parsing to the internal grammars, the *Noweb*-specific
+  inline command `[[]]` is unknown to VS Code. Only the surrounding brackets will get
+  highlighted, as throughout the rest of the `.nw` file. In addition, a sequence like `[[%token]]`
+  will start a LaTeX comment until the end of the current line.
+
+  I'm happy with the rest of the LaTeX parsing and don't plan to do anything about this minor
+  issue at the moment.
+
 
 ## Used token types
 
@@ -29,10 +46,10 @@ while the optional `[]` brackets contain the modifier(s).
 
 | Regex | Token | Meaning |
 |-------|-------|---------|
-| `/^@\s*$/` | function[declaration] | The start of a new *Noweb* chunk |
+| `/^@\s*.*$/` | function[declaration] | The start of a new *Noweb* chunk |
 | `/^<<(.*)>>=\s*$/` | variable | Definition of a keyword |
 | `/^<<(.*)>>+=\s*$/` | variable | Addition to a keyword |
-| `/^<<(.*)>>\s*$/` | keyword | Reference to a defined keyword |
+| `/<<(.*?)>>/g` | keyword | Reference to a defined keyword |
 | " | comment | Reference to an undefined keyword |
 | `.*` | string | All other text in a code section, meaning the 'code' itself |
 
