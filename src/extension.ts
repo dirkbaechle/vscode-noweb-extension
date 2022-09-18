@@ -76,7 +76,7 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
     private _parse(text: string, cancel: vscode.CancellationToken): IToken[] {
         let tokens: IToken[] = [];
         let keywords = {defines: new Set<string>()};
-        let mode = Mode.code;
+        let mode = Mode.tex;
         let i = 0;
         const lines = text.split(/\r?\n/);
         while (i < lines.length && !cancel.isCancellationRequested) {
