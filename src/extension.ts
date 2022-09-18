@@ -54,16 +54,11 @@ const definitionType = 'variable';
 const referenceType = 'keyword';
 const undefinedReferenceType = 'comment';
 const codeType = 'string';
-const latexCommentType = 'comment';
-const latexCommandType = 'macro';
 
 // Regexes
 const reDefinition = /^<<(.*)>>=\s*$/;
 const reReference = /^\s*<<(.*)>>\s*$/;
 const reChunkStart = /^@\s*$/;
-
-const reLaTeXSection = /\\(section|subsection|subsubsection|paragraph|subparagraph|title|author)\{[^\}]*\}/;
-const reLaTeXCommand = /\\[\[\]\{\}0-9a-zA-Z_]+/g;
 
 class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
     provideDocumentSemanticTokens(doc: vscode.TextDocument, cancel: vscode.CancellationToken) {
@@ -154,31 +149,9 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
                 });
                 keywords.defines.add(match[1]);
                 return Mode.code;
-            } else {
             }
         }
         return Mode.tex;
-    }
-
-    private _parseTeXCommands(tokens: IToken[], i: number, line: string) {
-        let match = reLaTeXSection.exec(line);
-        if (match) {
-            tokens.push({
-                line: i, start: match.index, length: match[0].length,
-                type: latexCommandType, modifiers: [],
-                keyword: ''
-            });
-        } else {
-            match = reLaTeXCommand.exec(line);
-            while (match) {
-                tokens.push({
-                    line: i, start: match.index, length: match[0].length,
-                    type: latexCommandType, modifiers: [],
-                    keyword: ''
-                });
-                match = reLaTeXCommand.exec(line);
-            }
-        }
     }
 
     private _encodeType(type: string) {
