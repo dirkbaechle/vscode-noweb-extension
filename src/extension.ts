@@ -234,10 +234,14 @@ class NowebFoldingRangeProvider implements vscode.FoldingRangeProvider {
             if (reChunkStart.test(line)) {
                 if ((i-1) > lastFoldline) {
                     ranges.push(new vscode.FoldingRange(lastFoldline, i-1));
-                    lastFoldline = i;
                 }
+                lastFoldline = i;
             }
             i++;
+        }
+        // Final fold at end of file
+        if ((i-1) > lastFoldline) {
+            ranges.push(new vscode.FoldingRange(lastFoldline, i-1));
         }
 
         return ranges;
