@@ -83,7 +83,7 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
             const line = lines[i];
             switch (mode as Mode) {
                 case Mode.code:
-                    mode = this._parseCode(tokens, i, line);
+                    mode = this._parseCode(tokens, i, line, keywords);
                     break;
                 default:
                     mode = this._parseTeX(tokens, i, line, keywords);
@@ -102,7 +102,7 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
         return tokens;
     }
 
-    private _parseCode(tokens: IToken[], i: number, line: string): Mode {
+    private _parseCode(tokens: IToken[], i: number, line: string, keywords: {defines: Set<string>}): Mode {
         // Check for the start of a new Noweb chunk
         if (reChunkStart.test(line)) {
             tokens.push({
@@ -121,12 +121,15 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
                     keyword: match[1]
                 });
             } else {
-                // We assume that all other lines are code
-                tokens.push({
-                    line: i, start: 0, length: line.length,
-                    type: codeType, modifiers: [],
-                    keyword: ''
-                });
+                const {mode, found} = this._checkForDefinitionKeywords(tokens, i, line, keywords);
+                if (!found) {
+                    // We assume that all other lines are code
+                    tokens.push({
+                        line: i, start: 0, length: line.length,
+                        type: codeType, modifiers: [],
+                        keyword: ''
+                    });
+                } 
             }
         }
         return Mode.code;
@@ -141,30 +144,40 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
                 keyword: ''
             });
         } else {
-            // Check for a keyword definition
-            const match = reDefinition.exec(line);
-            if (match) {
-                tokens.push({
-                    line: i, start: 0, length: line.length,
-                    type: definitionType, modifiers: [],
-                    keyword: ''
-                });
-                keywords.defines.add(match[1]);
-                return Mode.code;
-            } else {
-                // Check for an addition to a keyword
-                const match = reAddDefinition.exec(line);
-                if (match) {
-                    tokens.push({
-                        line: i, start: 0, length: line.length,
-                        type: addDefinitionType, modifiers: [],
-                        keyword: match[1]
-                    });
-                    return Mode.code;
-                }
+            const {mode, found} = this._checkForDefinitionKeywords(tokens, i, line, keywords);
+            if (found) {
+                return mode;
             }
         }
         return Mode.tex;
+    }
+
+    private _checkForDefinitionKeywords(tokens: IToken[], i: number, line: string, keywords: {defines: Set<string>}): {mode: Mode, found: boolean} {
+        let found: boolean = false;
+        // Check for a keyword definition
+        const match = reDefinition.exec(line);
+        if (match) {
+            tokens.push({
+                line: i, start: 0, length: line.length,
+                type: definitionType, modifiers: [],
+                keyword: ''
+            });
+            keywords.defines.add(match[1]);
+            found = true;
+        } else {
+            // Check for an addition to a keyword
+            const match = reAddDefinition.exec(line);
+            if (match) {
+                tokens.push({
+                    line: i, start: 0, length: line.length,
+                    type: addDefinitionType, modifiers: [],
+                    keyword: match[1]
+                });
+                found = true;
+            }
+        }
+
+        return {mode: Mode.code, found: found};
     }
 
     private _encodeType(type: string) {
