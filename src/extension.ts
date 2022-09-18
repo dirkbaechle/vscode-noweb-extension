@@ -51,14 +51,16 @@ enum Mode { tex = 1, code };
 const chunkStartType = 'function';
 const chunkStartModifiers = ['declaration'];
 const definitionType = 'variable';
+const addDefinitionType = 'variable';
 const referenceType = 'keyword';
 const undefinedReferenceType = 'comment';
 const codeType = 'string';
 
 // Regexes
 const reDefinition = /^<<(.*)>>=\s*$/;
+const reAddDefinition = /^<<(.*)>>\+=\s*$/;
 const reReference = /^\s*<<(.*)>>\s*$/;
-const reChunkStart = /^@\s*$/;
+const reChunkStart = /^@\s*.*$/;
 
 class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
     provideDocumentSemanticTokens(doc: vscode.TextDocument, cancel: vscode.CancellationToken) {
@@ -149,6 +151,17 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
                 });
                 keywords.defines.add(match[1]);
                 return Mode.code;
+            } else {
+                // Check for an addition to a keyword
+                const match = reAddDefinition.exec(line);
+                if (match) {
+                    tokens.push({
+                        line: i, start: 0, length: line.length,
+                        type: addDefinitionType, modifiers: [],
+                        keyword: match[1]
+                    });
+                    return Mode.code;
+                }
             }
         }
         return Mode.tex;
