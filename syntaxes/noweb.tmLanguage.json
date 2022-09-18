@@ -3,9 +3,6 @@
 	"name": "noweb",
 	"patterns": [
 		{
-			"include": "#chunkstart"
-		},
-		{
 			"include": "#chunkcode"
 		},
 		{
@@ -14,23 +11,11 @@
 
 	],
 	"repository": {
-		"chunkstart": {
-			"patterns": [{
-				"name": "string.noweb",
-				"match": "^@\\s*$"
-			}]
-		},
 		"chunkcode": {
 			"patterns": [{
-				"contentName": "string.regexp",
+				"name": "source.noweb",
 				"begin" : "^<<.*>>=\\s*$",
-				"end" : "^@\\s*$",
-				"beginCaptures": {
-					"0": { "name": "variable.language.noweb" }
-				},
-				"endCaptures": {
-					"0": { "name": "string.noweb" }
-				}
+				"end" : "^@\\s*$"
 			 }]
 		}
 	},

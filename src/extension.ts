@@ -155,38 +155,6 @@ class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
                 keywords.defines.add(match[1]);
                 return Mode.code;
             } else {
-                // Check for a comment definition...
-                let idx = 0;
-                let endIndex = line.length;
-                while (idx < endIndex) {
-                    if (line[idx] === '\\') {
-                        if (idx < endIndex-1) {
-                            // Skip potential '\%'
-                            idx++;
-                        }
-                    } else {
-                        // Found a comment
-                        if (line[idx] === '%') {
-                            break;
-                        }
-                    }
-                    idx++;
-                }
-                if (idx < endIndex) {
-                    // ... and 'split it off'.
-                    endIndex = idx;
-                    tokens.push({
-                        line: i, start: endIndex, length: line.length-endIndex,
-                        type: latexCommentType, modifiers: [],
-                        keyword: ''
-                    });
-                }
-
-                if (endIndex > 0) {
-                    // Parse for actual commands
-                    const commandLine = line.substring(0, endIndex);
-                    this._parseTeXCommands(tokens, i, commandLine);
-                }
             }
         }
         return Mode.tex;
