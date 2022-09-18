@@ -1,6 +1,7 @@
-# Noweb Extension for Visual Studio Code
+# Noweb Literate Programming Extension for Visual Studio Code
 
-This is an extension for Visual Studio Code, supporting [Literate Programming](http://www.literateprogramming.com) using
+This is an extension for Visual Studio Code, supporting
+[Literate Programming](http://www.literateprogramming.com) using
 the [Noweb](https://www.cs.tufts.edu/~nr/noweb/) tool written by Norman Ramsey.
 
 Its main goal is to provide a somewhat decent syntax highlighting for Noweb files.
@@ -9,14 +10,17 @@ Its main goal is to provide a somewhat decent syntax highlighting for Noweb file
 
 ## Features
 
-- Basic syntax highlighting.
+- Basic syntax highlighting for Noweb keywords. The LaTeX sections are delegated to the
+  internal TeX highlighting grammars of VS Code.
 - Detects and colorizes undefined keywords.
 - Basic folding support.
+- Auto-completion for `<<>>` brackets.
 
 ## Known Issues
 
 - Noweb common file extensions, `.nw` and `.noweb`, may conflict with other tools.
-- The used token types, and therefore the items' colors, have been tested with the "Dark +" theme only. Token colors may clash or be undistinguishable when using a different theme.
+- The used token types, and therefore the items' colors, have been tested with the "Dark +"
+  theme only. Token colors may clash or be undistinguishable when using a different theme.
 
 ## Used token types
 
@@ -26,5 +30,5 @@ Its main goal is to provide a somewhat decent syntax highlighting for Noweb file
 | `/^<<(.*)>>=\s*$/` | variable | Definition of a keyword |
 | `/^<<(.*)>>\s*$/` | keyword | Reference to a defined keyword |
 | " | comment | Reference to an undefined keyword |
-| `.*` | string | All other text in a code section |
+| `.*` | string | All other text in a code section, meaning the 'code' itself |
 
