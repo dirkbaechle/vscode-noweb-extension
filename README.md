@@ -48,7 +48,6 @@ while the optional `[]` brackets contain the modifier(s).
 |-------|-------|---------|
 | `/^@\s*.*$/` | function[declaration] | The start of a new *Noweb* chunk |
 | `/^<<(.*)>>=\s*$/` | variable | Definition of a keyword |
-| `/^<<(.*)>>+=\s*$/` | variable | Addition to a keyword |
 | `/<<(.*?)>>/g` | keyword | Reference to a defined keyword |
 | " | comment | Reference to an undefined keyword |
 | `.*` | string | All other text in a code section, meaning the 'code' itself |

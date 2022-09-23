@@ -39,7 +39,10 @@
     "languages": [
       {
         "id": "noweb",
-        "aliases": ["Noweb", "noweb"],
+        "aliases": [
+          "Noweb",
+          "noweb"
+        ],
         "configuration": "./language-configuration.json",
         "extensions": [
           ".nw",
