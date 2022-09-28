@@ -146,8 +146,8 @@ export class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider
                         });
                     }
                 }
-                if (!hasReference) {
-                    // We assume that all other lines are code
+                if (!hasReference && (line.length > 0)) {
+                    // We assume that all other non-empty lines are code
                     tokens.push({
                         line: i, start: 0, length: line.length,
                         type: codeType, modifiers: [],

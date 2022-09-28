@@ -16,6 +16,15 @@ const nwtext = new Map<string, string>([
                '<<abc>>\n'+
                '@\n'+
                '<<abc>>=\n'+
-               'def']
-
+               'def'],
+    ['muldef', '@\n'+
+               'Test\n'+
+               '<<t>>=\n'+
+               'xyz\n'+
+               '<<abc>>\n'+
+               '\n'+
+               '<<abc>>=\n'+
+               'def\n\n'+
+               '<<lmn>>=\n'+
+               'some<<hjk>>\n']
 ]);
