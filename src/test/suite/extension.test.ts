@@ -5,7 +5,8 @@ import * as vscode from 'vscode';
 import * as myExtension from '../../extension';
 import { nowebText } from './texts';
 import { containsToken, t, 
-	    chunk, definition, code, reference, undefinedReference } from './utils';
+	     chunk, definition, code, reference, undefinedReference,
+	     containsRange, r } from './utils';
 
 suite('Noweb semantic highlighting', () => {
 
@@ -187,8 +188,58 @@ suite('Noweb semantic highlighting', () => {
 });
 
 
+suite('Folding support', () => {
+
+	test('Empty file', function () {
+		let ranges = buildFoldingRanges("");
+		assert.strictEqual(ranges.length, 0);
+
+	});
+
+	test("Single chunk start doesn't fold", function () {
+		let ranges = buildFoldingRanges("@ ");
+		assert.strictEqual(ranges.length, 0);
+		ranges = buildFoldingRanges("  \n@ ");
+		assert.strictEqual(ranges.length, 0);
+	});
+
+	test("Single fold", function () {
+		let ranges = buildFoldingRanges("@ \n");
+		assert.strictEqual(ranges.length, 1);
+		let s: vscode.FoldingRange = r(0, 1);
+		assert.strictEqual(containsRange(ranges, s), true, "Fold not found");
+	});
+
+	test("Fold at start and end of file", function () {
+		let ranges = buildFoldingRanges("\n\n@ \n");
+		assert.strictEqual(ranges.length, 2);
+		let s: vscode.FoldingRange = r(0, 1);
+		assert.strictEqual(containsRange(ranges, s), true, "First fold not found");
+		s = r(2, 3);
+		assert.strictEqual(containsRange(ranges, s), true, "Second fold not found");
+	});
+
+	test("Single lines don't fold", function () {
+		let ranges = buildFoldingRanges("\n\n@ \n@\n@\n\n");
+		assert.strictEqual(ranges.length, 2);
+		let s: vscode.FoldingRange = r(0, 1);
+		assert.strictEqual(containsRange(ranges, s), true, "First fold not found");
+		s = r(4, 6);
+		assert.strictEqual(containsRange(ranges, s), true, "Second fold not found");
+	});
+
+});
+
+
 function buildSemanticTokens(content: string): myExtension.IToken[] {
 	let cancel = new vscode.CancellationTokenSource();
 	const semProv = new myExtension.NowebTokenProvider();
 	return semProv.parse(content, cancel.token);
+}
+
+function buildFoldingRanges(content: string): vscode.FoldingRange[] {
+	let cancel = new vscode.CancellationTokenSource();
+	const foldProv = new myExtension.NowebFoldingRangeProvider();
+
+	return foldProv.parse(content, cancel.token);
 }

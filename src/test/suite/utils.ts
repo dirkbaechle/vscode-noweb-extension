@@ -1,4 +1,9 @@
+import * as vscode from 'vscode';
 import * as myExtension from '../../extension';
+
+//
+// Semantic highlighting
+//
 
 export function containsToken(tokens: myExtension.IToken[], t: myExtension.IToken): boolean {
 	if (tokens.find(value => tokenEquals(t, value)) !== undefined) {
@@ -46,3 +51,26 @@ function tokenEquals(a: myExtension.IToken, b: myExtension.IToken): boolean {
 	return false;
 }
 
+//
+// Folding ranges
+//
+
+export function containsRange(ranges: vscode.FoldingRange[], r: vscode.FoldingRange): boolean {
+	if (ranges.find(value => rangeEquals(r, value)) !== undefined) {
+		return true;
+	}
+
+	return false;
+}
+
+export function r(start: number, end: number): vscode.FoldingRange {
+	return new vscode.FoldingRange(start, end);
+}
+
+function rangeEquals(a: vscode.FoldingRange, b: vscode.FoldingRange): boolean {
+	if ((a.start === b.start) &&
+	    (a.end === b.end)) {
+		return true;
+	}
+	return false;
+}
