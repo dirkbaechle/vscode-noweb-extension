@@ -58,7 +58,7 @@ export const codeType = 'string';
 // Regexes
 const reDefinition = /^<<(.*)>>=\s*$/;
 const reReference = /<<(.*?)>>/g;
-const reChunkStart = /^@\s*.*$/;
+const reChunkStart = /(^@$|^@\s+.*$)/;
 
 export class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
     provideDocumentSemanticTokens(doc: vscode.TextDocument, cancel: vscode.CancellationToken) {
