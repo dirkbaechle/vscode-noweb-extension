@@ -3,10 +3,50 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as myExtension from '../../extension';
+import * as noweb from '../../noweb';
 import { nowebText } from './texts';
 import { containsToken, t, 
 	     chunk, definition, code, reference, undefinedReference,
-	     containsRange, r } from './utils';
+	     containsRange, r, result, resultEquals } from './utils';
+
+suite('Noweb syntax parsing', () => {
+
+	test('Module start and end', function () {
+		assert.strictEqual(resultEquals(noweb.moduleStart("  <<horst>>  "), result(true, 4, '')),
+		                   true, "Start of module not detected");
+		assert.strictEqual(resultEquals(noweb.moduleStart("  <<horst>>  ", 2), result(true, 4, '')),
+		                   true, "Start of module with start index not detected");
+		assert.strictEqual(resultEquals(noweb.moduleEnd("  <<horst>>  "), result(true, 11, '')),
+		                   true, "End of module not detected");
+		assert.strictEqual(resultEquals(noweb.moduleEnd("  <<horst>>  ", 4), result(true, 11, '')),
+		                   true, "End of module with end index not detected");
+	});
+
+	test('Module name', function () {
+		assert.strictEqual(resultEquals(noweb.getModuleName("  <<horst>>  "), result(true, 4, 'horst')),
+		                   true, "Module name not detected");
+		assert.strictEqual(resultEquals(noweb.getModuleName("  @<<horst>>  "), result(false, -1, '')),
+		                   true, "Module name with escaped start shouldn't be detected");
+		assert.strictEqual(resultEquals(noweb.getModuleName("  <<horst@>>  "), result(false, -1, '')),
+		                   true, "Module name with escaped end shouldn't be detected");
+		assert.strictEqual(resultEquals(noweb.getModuleName("  @<<horst@>>  "), result(false, -1, '')),
+		                   true, "Module name with escaped start/end shouldn't be detected");
+	});
+
+	test('Start of new module', function () {
+		assert.strictEqual(noweb.startsCode("<<horst>>="), true, "Start of module not detected");
+		assert.strictEqual(noweb.startsCode("<<horst>>=  "), true, "Module with equals and trailing whitespace not detected");
+		assert.strictEqual(noweb.startsCode("  <<horst>>="), false, "Module with leading whitespace shouldn't be detected");
+		assert.strictEqual(noweb.startsCode("<<horst>>"), false, "Module without equals shouldn't be detected");
+		assert.strictEqual(noweb.startsCode("<<horst>> ="), false, "Module with space before equals shouldn't be detected");
+		assert.strictEqual(noweb.startsCode("<<horst>>  "), false, "Module whitespace shouldn't be detected");
+		assert.strictEqual(noweb.startsCode("@<<horst>>="), false, "Module with escaped start shouldn't be detected");
+		assert.strictEqual(noweb.startsCode("<<horst@>>="), false, "Module with escaped end shouldn't be detected");
+		assert.strictEqual(noweb.startsCode("@<<horst@>>="), false, "Module name with escaped start/end shouldn't be detected");
+	});
+		
+});
+
 
 suite('Noweb semantic highlighting', () => {
 

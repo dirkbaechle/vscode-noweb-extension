@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as myExtension from '../../extension';
+import * as noweb from '../../noweb';
 
 //
 // Semantic highlighting
@@ -49,6 +50,20 @@ function tokenEquals(a: myExtension.IToken, b: myExtension.IToken): boolean {
 		return true;
 	}
 	return false;
+}
+
+//
+// Module names / Escaped chunk start and end
+//
+
+export function result(res: boolean, idx: number, mod: string): noweb.IResult {
+    return {found: res, start: idx, name: mod};
+}
+
+export function resultEquals(a: noweb.IResult, b: noweb.IResult): boolean {
+    return (a.found === b.found &&
+            a.start === b.start &&
+            a.name === b.name);
 }
 
 //
