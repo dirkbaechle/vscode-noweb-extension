@@ -6,15 +6,16 @@ the [Noweb](https://www.cs.tufts.edu/~nr/noweb/) tool written by Norman Ramsey.
 
 Its main goal is to provide a somewhat decent syntax highlighting for *Noweb* files.
 
-**Note**: This is a work in progress and has been tested with Noweb versions 2.x only. There
-currently are no tests provided, however the extension was manually tested against the
-syntax of all the example files in https://github.com/nrnrnr/noweb/tree/master/examples.
+**Note**: This is a work in progress and has been tested with Noweb versions 2.x only. In
+addition to the basic unit tests provided, the extension was manually tested against the
+syntax of all `.nw` files in https://github.com/nrnrnr/noweb 
+and https://github.com/keesiong/escher.
 
 ## Features
 
 - Basic syntax highlighting for *Noweb* keywords. The TeX sections are delegated to the
   internal LaTeX highlighting grammars of VS Code.
-- Detects and colorizes undefined *Noweb* keywords.
+- Detects and colorizes undefined *Noweb* keywords (but only within the same file).
 - Basic folding support.
 - Auto-completion for `<<>>` brackets.
 
@@ -23,13 +24,6 @@ syntax of all the example files in https://github.com/nrnrnr/noweb/tree/master/e
 - *Noweb* common file extensions, `.nw` and `.noweb`, may conflict with other tools.
 - The used token types, and therefore the items' colors, have been tested with the "Dark+"
   theme only. Token colors may clash or be undistinguishable when using a different theme.
-- The current parsing assumes that the start of a new chunk (`@` in first column) and a
-  possible keyword definition, appear in separate lines. So, a very condensed syntax
-  `@<<\fIchunk name\fP@>>=`, like in `manpage.nw` of the original *Noweb* sources,
-  isn't detected correctly.
-
-  This is easily fixable in the `.nw` file by pressing the `Return` key once, so at the moment
-  I don't plan to do anything about it.
 - Since we simply direct all LaTeX parsing to the internal grammars, the *Noweb*-specific
   inline command `[[]]` is unknown to VS Code. Only the surrounding brackets will get
   highlighted, as throughout the rest of the `.nw` file. In addition, a sequence like `[[%token]]`
