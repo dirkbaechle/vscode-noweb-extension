@@ -17,6 +17,7 @@
  */
 
 import * as vscode from 'vscode';
+import { startsCode, getModuleName } from './noweb';
 
 const tokenTypes = new Map<string, number>();
 const tokenModifiers = new Map<string, number>();
@@ -56,7 +57,6 @@ export const undefinedReferenceType = 'comment';
 export const codeType = 'string';
 
 // Regexes
-const reDefinition = /^<<(.*)>>=\s*$/;
 const reReference = /<<(.*?)>>/g;
 const reChunkStart = /(^@$|^@\s+.*$)/;
 
@@ -179,14 +179,14 @@ export class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider
     private _checkForDefinitionKeywords(tokens: IToken[], i: number, line: string, keywords: {defines: Set<string>}): {mode: Mode, found: boolean} {
         let found: boolean = false;
         // Check for a keyword definition
-        const match = reDefinition.exec(line);
-        if (match) {
+        if (startsCode(line)) {
+            const modName = getModuleName(line).name;
             tokens.push({
                 line: i, start: 0, length: line.length,
                 type: definitionType, modifiers: [],
                 keyword: ''
             });
-            keywords.defines.add(match[1]);
+            keywords.defines.add(modName);
             found = true;
         }
 

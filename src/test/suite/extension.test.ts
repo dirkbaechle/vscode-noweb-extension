@@ -129,6 +129,18 @@ suite('Noweb semantic highlighting', () => {
 		tokens = buildSemanticTokens("@  \t  test");
 		assert.strictEqual(tokens.length, 1, "Chunk should start with TABs and spaces");
 		assert.strictEqual(containsToken(tokens, s), true, "Chunk with TABs and spaces isn't detected");
+		tokens = buildSemanticTokens("@\n@<<abc>>=");
+		assert.strictEqual(tokens.length, 1, "Module with escaped start shouldn't be detected");
+		tokens = buildSemanticTokens("@\n<<abc@>>=");
+		assert.strictEqual(tokens.length, 1, "Module with escaped end shouldn't be detected");
+		tokens = buildSemanticTokens("@\n@<<abc@>>=");
+		assert.strictEqual(tokens.length, 1, "Module with escaped start/end shouldn't be detected");
+		tokens = buildSemanticTokens("@\n@@<<abc>>=");
+		assert.strictEqual(tokens.length, 1, "Module with double escaped start shouldn't be detected");
+		tokens = buildSemanticTokens("@\n<<abc@@>>=");
+		assert.strictEqual(tokens.length, 1, "Module with double escaped end shouldn't be detected");
+		tokens = buildSemanticTokens("@\n@@<<abc@@>>=");
+		assert.strictEqual(tokens.length, 1, "Module with double escaped start/end shouldn't be detected");
 	});
 
 	test('Multiple references per line', function () {
@@ -223,6 +235,27 @@ suite('Noweb semantic highlighting', () => {
 		assert.strictEqual(containsToken(tokens, s), true, "Third code section isn't contained");
 		s = undefinedReference(10, 4, 7, "hjk");
 		assert.strictEqual(containsToken(tokens, s), true, "Unresolved reference isn't contained");
+
+		tokens = buildSemanticTokens(nowebText('escdef'));
+		assert.strictEqual(tokens.length, 9);
+		s = chunk(0, 0, 1);
+		assert.strictEqual(containsToken(tokens, s), true, "First chunk isn't contained");
+		s = definition(2, 0, 6);
+		assert.strictEqual(containsToken(tokens, s), true, "First definition isn't contained");
+		s = code(3, 0, 3);
+		assert.strictEqual(containsToken(tokens, s), true, "First code section isn't contained");
+		s = reference(4, 1, 7, "abc");
+		assert.strictEqual(containsToken(tokens, s), false, "Reference with escaped start shouldn't be contained");
+		s = definition(6, 0, 9);
+		assert.strictEqual(containsToken(tokens, s), false, "Definition with escaped end shouldn't be contained");
+		s = code(7, 0, 3);
+		assert.strictEqual(containsToken(tokens, s), true, "Second code section isn't contained");
+		s = definition(9, 0, 8);
+		assert.strictEqual(containsToken(tokens, s), true, "Third definition isn't contained");
+		s = code(10, 0, 13);
+		assert.strictEqual(containsToken(tokens, s), true, "Third code section isn't contained");
+		s = undefinedReference(10, 4, 9, "hjk");
+		assert.strictEqual(containsToken(tokens, s), false, "Reference with escaped start/end shouldn't be contained");		
 	});
 
 });
