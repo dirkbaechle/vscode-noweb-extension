@@ -3,6 +3,13 @@
 // This is the attempt to be as close as possible to the original
 // while parsing Noweb syntax...
 
+const modStart = '<<';
+const modStartLength = modStart.length;
+const modEnd = '>>';
+const modEndLength = modEnd.length;
+const modStartEscaped = '@<<';
+const modEndEscaped = '@>>';
+
 export interface IResult {
     found: boolean,
     start: number,
@@ -45,11 +52,11 @@ export function findEscaped(input: string, search: string,
 }
 
 export function moduleStart(str: string, idx: number = 0): IResult {
-    return findEscaped(str,"<<","@<<", idx);
+    return findEscaped(str, modStart, modStartEscaped, idx);
 }
 
 export function moduleEnd(str: string, idx: number = 0): IResult {
-    return findEscaped(str,">>","@>>", idx);
+    return findEscaped(str, modEnd, modEndEscaped, idx);
 }
 
 export function startsCode(line: string): boolean {
@@ -79,4 +86,18 @@ export function getModuleName(line: string, idx: number = 0): IResult {
         return {found: false, start: -1, name: ''};
     }
     return {found: true, start: startIndex, name: line.substring(startIndex, result.start-2)};
+}
+
+export function matchLength(match: IResult): number {
+    if (match.found) {
+        return match.name.length + modStartLength + modEndLength;
+    }
+    return 0;
+}
+
+export function correctStartIndex(start: number): number {
+    if (start > modStartLength) {
+        return start - modStartLength;
+    }
+    return 0;
 }

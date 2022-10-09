@@ -31,6 +31,10 @@ suite('Noweb syntax parsing', () => {
 		                   true, "Module name with escaped end shouldn't be detected");
 		assert.strictEqual(resultEquals(noweb.getModuleName("  @<<horst@>>  "), result(false, -1, '')),
 		                   true, "Module name with escaped start/end shouldn't be detected");
+		assert.strictEqual(resultEquals(noweb.getModuleName("test<<xyz>><<lmn>>"), result(true, 6, 'xyz')),
+		                   true, "First module name not detected");
+		assert.strictEqual(resultEquals(noweb.getModuleName("test<<xyz>><<lmn>>", 11), result(true, 13, 'lmn')),
+		                   true, "Second module name not detected");
 	});
 
 	test('Start of new module', function () {
@@ -216,7 +220,7 @@ suite('Noweb semantic highlighting', () => {
 
 	test('Multiple definitions per chunk', function () {
 		let tokens = buildSemanticTokens(nowebText('muldef'));
-		assert.strictEqual(tokens.length, 9);
+		assert.strictEqual(tokens.length, 9, 'Incorrect number of tokens for muldef');
 		let s: myExtension.IToken = chunk(0, 0, 1);
 		assert.strictEqual(containsToken(tokens, s), true, "First chunk isn't contained");
 		s = definition(2, 0, 6);
@@ -237,13 +241,19 @@ suite('Noweb semantic highlighting', () => {
 		assert.strictEqual(containsToken(tokens, s), true, "Unresolved reference isn't contained");
 
 		tokens = buildSemanticTokens(nowebText('escdef'));
-		assert.strictEqual(tokens.length, 9);
+		assert.strictEqual(tokens.length, 8, 'Incorrect number of tokens for escdef');
 		s = chunk(0, 0, 1);
 		assert.strictEqual(containsToken(tokens, s), true, "First chunk isn't contained");
 		s = definition(2, 0, 6);
 		assert.strictEqual(containsToken(tokens, s), true, "First definition isn't contained");
 		s = code(3, 0, 3);
 		assert.strictEqual(containsToken(tokens, s), true, "First code section isn't contained");
+		s = code(4, 0, 8);
+		assert.strictEqual(containsToken(tokens, s), true, "Second code section isn't contained");
+		s = code(6, 0, 9);
+		assert.strictEqual(containsToken(tokens, s), true, "Third code section isn't contained");
+		s = code(7, 0, 3);
+		assert.strictEqual(containsToken(tokens, s), true, "Fourth code section isn't contained");
 		s = reference(4, 1, 7, "abc");
 		assert.strictEqual(containsToken(tokens, s), false, "Reference with escaped start shouldn't be contained");
 		s = definition(6, 0, 9);
@@ -253,8 +263,8 @@ suite('Noweb semantic highlighting', () => {
 		s = definition(9, 0, 8);
 		assert.strictEqual(containsToken(tokens, s), true, "Third definition isn't contained");
 		s = code(10, 0, 13);
-		assert.strictEqual(containsToken(tokens, s), true, "Third code section isn't contained");
-		s = undefinedReference(10, 4, 9, "hjk");
+		assert.strictEqual(containsToken(tokens, s), true, "Fifth code section isn't contained");
+		s = undefinedReference(10, 5, 13, "hjk");
 		assert.strictEqual(containsToken(tokens, s), false, "Reference with escaped start/end shouldn't be contained");		
 	});
 

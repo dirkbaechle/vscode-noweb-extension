@@ -17,7 +17,8 @@
  */
 
 import * as vscode from 'vscode';
-import { startsCode, getModuleName } from './noweb';
+import { startsCode, getModuleName,
+        matchLength, correctStartIndex } from './noweb';
 
 const tokenTypes = new Map<string, number>();
 const tokenModifiers = new Map<string, number>();
@@ -57,7 +58,6 @@ export const undefinedReferenceType = 'comment';
 export const codeType = 'string';
 
 // Regexes
-const reReference = /<<(.*?)>>/g;
 const reChunkStart = /(^@$|^@\s+.*$)/;
 
 export class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider {
@@ -116,24 +116,26 @@ export class NowebTokenProvider implements vscode.DocumentSemanticTokensProvider
                 // Check for keyword references
                 let hasReference: boolean = false;
                 let lastCodeIndex = 0;
-                let match = reReference.exec(line);
-                while (match) {
+                let match = getModuleName(line, lastCodeIndex);
+                let correctedStart = correctStartIndex(match.start);
+                while (match.found) {
                     hasReference = true;
                     tokens.push({
-                        line: i, start: match.index, length: match[0].length,
+                        line: i, start: correctedStart, length: matchLength(match),
                         type: referenceType, modifiers: [],
-                        keyword: match[1]
+                        keyword: match.name
                     });
                     // Handle code snippets between matches
-                    if (lastCodeIndex < match.index) {
+                    if (lastCodeIndex < correctedStart) {
                         tokens.push({
-                            line: i, start: lastCodeIndex, length: (match.index - lastCodeIndex),
+                            line: i, start: lastCodeIndex, length: (correctedStart - lastCodeIndex),
                             type: codeType, modifiers: [],
                             keyword: ''
                         });
                     }
-                    lastCodeIndex = match.index + match[0].length;
-                    match = reReference.exec(line);
+                    lastCodeIndex = correctedStart + matchLength(match);
+                    match = getModuleName(line, lastCodeIndex);
+                    correctedStart = correctStartIndex(match.start);
                 }
                 if (hasReference) {
                     // Close remaining code snippet after last match
